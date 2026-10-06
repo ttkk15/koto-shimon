@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>一問一答 音声ドリル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --paper:#E7E9E3; --surface:#FCFCFA; --surface-2:#F1F3ED;
+    --ink:#18262A; --ink-2:#3C4C4E; --muted:#6E7C78; --line:#CFD5CD;
+    --accent:#14635F; --accent-soft:#DCE8E5; --ochre:#9A6E16; --ochre-soft:#F3EBD8;
+    --ok:#1F6B4C; --ok-soft:#DDEBE2; --ng:#A03E2E; --ng-soft:#F2E0DB; --rec:#B5392A;
+    --shadow:0 1px 2px rgba(24,38,42,.06), 0 8px 24px -16px rgba(24,38,42,.35);
+    --mincho:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --gothic:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --paper:#10171A; --surface:#192226; --surface-2:#202B2F;
+      --ink:#E4EAE7; --ink-2:#BCC8C5; --muted:#8B9B97; --line:#2E3C40;
+      --accent:#6FC0B4; --accent-soft:#1E3436; --ochre:#D2A54A; --ochre-soft:#2E2718;
+      --ok:#7FC79E; --ok-soft:#1B2E26; --ng:#E2897A; --ng-soft:#33211E; --rec:#E8705F;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -18px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --paper:#10171A; --surface:#192226; --surface-2:#202B2F;
+    --ink:#E4EAE7; --ink-2:#BCC8C5; --muted:#8B9B97; --line:#2E3C40;
+    --accent:#6FC0B4; --accent-soft:#1E3436; --ochre:#D2A54A; --ochre-soft:#2E2718;
+    --ok:#7FC79E; --ok-soft:#1B2E26; --ng:#E2897A; --ng-soft:#33211E; --rec:#E8705F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -18px rgba(0,0,0,.9);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--gothic);line-height:1.7;-webkit-text-size-adjust:100%}
+  .top{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .top h1{font-family:var(--mincho);font-size:18px;margin:0;font-weight:600}
+  .top .sub{font-size:12px;color:var(--muted)}
+  .top .spacer{flex:1}
+  .btn{font:inherit;font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+  .btn:hover{background:var(--surface-2)} .btn:disabled{opacity:.5;cursor:default}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .btn.danger{background:var(--ng-soft);border-color:var(--ng-soft);color:var(--ng)}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--accent)}
+  .btn.big{font-size:17px;padding:14px 22px}
+  .wrap{display:grid;grid-template-columns:300px 1fr;gap:16px;max-width:1180px;margin:0 auto;padding:16px}
+  @media (max-width:860px){.wrap{grid-template-columns:1fr}.list{order:2}}
+  .list{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;max-height:calc(100vh - 100px);overflow:auto;position:sticky;top:76px;align-self:start}
+  @media (max-width:860px){.list{position:static;max-height:none}}
+  .list h2{font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:500;margin:8px 8px 4px}
+  .cat{font-family:var(--mincho);font-size:13px;color:var(--ink-2);margin:12px 8px 4px;border-left:3px solid var(--accent);padding-left:8px}
+  .qbtn{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:5px 8px;border-radius:6px;font-size:13px;line-height:1.4}
+  .qbtn:hover{background:var(--surface-2)} .qbtn.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .qbtn .no{font-family:var(--mincho);color:var(--muted);min-width:1.8em;font-variant-numeric:tabular-nums}
+  .qbtn .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qbtn .st{font-size:11px;white-space:nowrap;padding:0 6px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+  .qbtn .st.done{background:var(--ok-soft);color:var(--ok)} .qbtn .st.learn{background:var(--ng-soft);color:var(--ng)} .qbtn .st.review{background:var(--ochre-soft);color:var(--ochre)}
+  .prog{margin:4px 8px 8px;font-size:12.5px;color:var(--ink-2)}
+  .prog .trk{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;margin:6px 0;display:flex}
+  .prog .trk i{display:block;height:100%} .prog .trk .d{background:var(--ok)} .prog .trk .r{background:var(--ochre)} .prog .trk .l{background:var(--ng)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 24px;box-shadow:var(--shadow);margin-bottom:16px}
+  @media (max-width:600px){.card{padding:16px}}
+  .eyebrow{font-size:12px;color:var(--muted);letter-spacing:.08em;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .eyebrow .pill{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:1px 10px;letter-spacing:0}
+  .qtext{font-family:var(--mincho);font-size:19px;line-height:1.8;margin:10px 0 6px;text-wrap:balance}
+  .qtext.hidden-q{filter:blur(6px);user-select:none}
+  @media (max-width:600px){.qtext{font-size:17px}}
+  .console{display:flex;gap:14px;align-items:center;margin-top:14px;padding:12px 16px;border-radius:10px;background:var(--surface-2);flex-wrap:wrap}
+  .status{font-size:14px;color:var(--ink-2);flex:1;min-width:200px} .status b{font-weight:600;color:var(--ink)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--rec);margin-right:6px;vertical-align:middle;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .ctrls{display:flex;gap:8px;flex-wrap:wrap}
+  .tr{margin-top:12px} .tr .lbl{font-size:12px;color:var(--muted);letter-spacing:.08em}
+  .trbox{min-height:60px;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface);font-size:16px;line-height:1.8;white-space:pre-wrap}
+  .trbox .interim{color:var(--muted)}
+  textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font:inherit;font-size:16px;line-height:1.8;background:var(--surface);color:var(--ink)}
+  textarea{min-height:70px;resize:vertical}
+  textarea:focus,input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .verdict{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:4px}
+  .verdict .big{font-family:var(--mincho);font-size:40px;line-height:1.2;padding:2px 14px;border-radius:10px}
+  .verdict .big.ok{background:var(--ok-soft);color:var(--ok)} .verdict .big.ng{background:var(--ng-soft);color:var(--ng)}
+  .verdict .sub{color:var(--ink-2);font-size:14px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
+  .chip{font-size:12.5px;padding:2px 10px;border-radius:999px;border:1px solid var(--line)}
+  .chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent} .chip.ng{background:var(--ng-soft);color:var(--ng);border-color:transparent}
+  h3{font-family:var(--mincho);font-size:16px;margin:16px 0 6px;font-weight:600;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  h3 .tag{font-family:var(--gothic);font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.08em}
+  .model{white-space:pre-wrap;line-height:1.9;font-size:15px;max-width:48em}
+  .note{font-size:13px;color:var(--muted);margin:8px 0 0}
+  .warnbox{background:var(--ochre-soft);color:var(--ochre);border-radius:8px;padding:10px 14px;font-size:13.5px;margin-top:10px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .empty{color:var(--ink-2);padding:10px 0 6px;font-family:var(--mincho);font-size:16px;line-height:1.9}
+  .settings{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:12px}
+  .settings select{font:inherit;font-size:13px;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:220px}
+  .settings label{display:flex;gap:6px;align-items:center}
+  .vname,.vhelp{font-size:12.5px;color:var(--muted)} .vhelp{margin:6px 0 0;line-height:1.6}
+  .how{font-size:13.5px;color:var(--ink-2);line-height:1.8;margin:8px 0 0;padding-left:1.2em}
+  .src{font-size:12px;color:var(--muted);margin-top:14px}
+  .inapp{background:var(--ng-soft);color:var(--ng);border-bottom:1px solid var(--line);padding:10px 16px;font-size:14px;line-height:1.6;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .inapp a.btn{color:#fff;background:var(--ng);border-color:var(--ng);text-decoration:none;font-weight:600}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
+  .summary div{background:var(--surface-2);border-radius:8px;padding:10px 12px;text-align:center}
+  .summary b{font-family:var(--mincho);font-size:26px;display:block;line-height:1.2}
+  .summary span{font-size:12px;color:var(--muted)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>一問一答 音声ドリル</h1>
+  <span class="sub">校長 口頭試問 ／ 読み上げ → 声で答える → 合否を声で返す → 間違いは忘れた頃にもう一度</span>
+  <span class="spacer"></span>
+  <button class="btn ghost" id="btnReset">記録を消す</button>
+</header>
+<div class="inapp" id="inapp" hidden></div>
+<div class="wrap">
+  <nav class="list" id="list" aria-label="問題一覧"></nav>
+  <main id="stage"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>// 生成物: make_qa.py が書き出す。直すときは make_qa.py を直す
+window.KOTO_QA = {"title": "一問一答 音声ドリル（校長 口頭試問）", "source": "01_元資料/★ R7【校長】口頭試問.doc（阿見町合同研修会 模擬試験【校長】口頭試問（案））", "intro": "これから口頭試問を始めます。回答の持ち時間は、各質問につき1分以内です。わからない場合は、「わかりません」とお答えください。それでは、質問を始めます。", "note": "原本の Q10 は Q9 と同文（答えは Q8 のもの）のため除外。全51問。", "categories": ["学校教育指導方針", "法規・服務", "特別支援教育", "生徒指導・いじめ・安全", "県の施策・調査", "人材育成・教職員", "不祥事防止・個人情報", "学校徴収金"], "questions": [{"id": "qa-01", "no": 1, "category": "学校教育指導方針", "question": "令和7年度学校教育指導方針では、各教科と生徒指導を一体化させた授業づくり・集団づくりを進めるために、4つの視点を示しています。1つは「共感的な人間関係」、1つは「自己決定の場」ですが、残りの2つを答えなさい。", "answer": "「自己存在感の感受」「安心安全な風土の醸成」", "keys": [["自己存在感", "存在感"], ["安心安全", "安全安心", "安心", "風土"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-02", "no": 2, "category": "学校教育指導方針", "question": "令和7年度学校教育指導方針では、すべての子どもの可能性を引き出す活力ある学校づくりを目指して、「未来を拓く学びの展開」を掲げています。そこには4つの視点が示されていますが、そのうちの3つは「問いの発見と解決に重点を置く探究的な学びの充実」「ICTの効果的な活用」「よりよい社会の創造に貢献する市民性の育成」です。残りのもう1つを答えなさい。", "answer": "「個々の発達段階や教育的ニーズに応じた学びの充実」", "keys": [["発達段階", "教育的ニーズ", "ニーズに応じ", "個に応じ", "個々"]], "need": 1, "reject": [], "tts": null, "note": null}, {"id": "qa-03", "no": 3, "category": "法規・服務", "question": "「公立の義務教育諸学校等の教育職員の給与等に関する特別措置法等の一部を改正する法律」の成立にともない、今後、教職調整額が段階的に引き上げられることになりましたが、いつまでに、どのように引き上げられるか答えなさい。", "answer": "令和8年から毎年1%ずつ引き上げられ、令和13年に10%に引き上げられる", "keys": [["令和8", "8年から", "2026"], ["1%ずつ", "1%", "毎年1"], ["令和13", "13年", "2031"], ["10%"]], "need": 3, "reject": [], "tts": "令和8年から毎年1パーセントずつ引き上げられ、令和13年に10パーセントになる", "note": null}, {"id": "qa-04", "no": 4, "category": "法規・服務", "question": "令和7年4月1日より「職員の旅費及び費用弁償に関する条例」が一部改正され、「公務上必要な場合」に限り、タクシー代やレンタカー代等の実費支給が認められるようになりました。この「公務上必要な場合」として、どのようなことが想定されていますか。", "answer": "公共の交通機関がない、又は運行本数が著しく少なく、徒歩による移動が困難な場合 など", "keys": [["公共の交通機関", "公共交通機関", "交通機関", "運行本数", "本数が少な", "徒歩", "移動が困難"]], "need": 1, "reject": [], "tts": null, "note": null}, {"id": "qa-05", "no": 5, "category": "特別支援教育", "question": "自立活動の指導内容は6つの区分に分けて示されていますが、「健康の保持」「環境の把握」「身体の動き」、あと3つの区分を答えなさい。", "answer": "「心理的な安定」「人間関係の形成」「コミュニケーション」", "keys": [["心理的", "心理"], ["人間関係"], ["コミュニケーション"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-06", "no": 6, "category": "生徒指導・いじめ・安全", "question": "「いじめ防止対策推進法」に示された「重大事態」の定義を2つ答えなさい。", "answer": "①いじめにより当該学校に在籍する児童等の生命、心身又は財産に重大な被害が生じた疑いがあると認めるとき\n②いじめにより当該学校に在籍する児童等が相当の期間学校を欠席することを余儀なくされている疑いがあると認めるとき", "keys": [["生命", "心身", "財産", "重大な被害"], ["欠席", "相当の期間", "相当期間"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-07", "no": 7, "category": "学校教育指導方針", "question": "幼児教育と小学校教育の円滑な接続に向けて文部科学省が進めている、5歳児から1年生の2年間のカリキュラムの編成・実施や体制づくりのことを何というか。", "answer": "幼保小の「架け橋プログラム」", "keys": [["架け橋", "かけはし", "掛け橋", "懸け橋", "架橋"]], "need": 1, "reject": [], "tts": null, "note": "参考：学校教育指導方針 p.12"}, {"id": "qa-08", "no": 8, "category": "法規・服務", "question": "校長が、所属する教職員の服務について管理監督責任を負うことの法的根拠を説明しなさい。", "answer": "学校教育法第37条に「校長は、校務をつかさどり、所属職員を監督する」と規定されていること", "keys": [["学校教育法"], ["37条", "37"], ["校務をつかさど", "校務", "所属職員を監督", "監督する"]], "need": 2, "reject": [], "tts": "学校教育法第37条に、校長は校務をつかさどり、所属職員を監督する、と規定されていること", "note": null}, {"id": "qa-09", "no": 9, "category": "学校教育指導方針", "question": "令和7年度学校教育指導方針「巻頭のことば」において、柳橋教育長は、次世代を担う「人材」の育成を推進し、子どもたちとともに明るい未来を創るためには、何よりも何が大切だとしているか。", "answer": "教職員が活力に満ち、笑顔で子どもたちと接すること", "keys": [["活力"], ["笑顔"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-11", "no": 11, "category": "法規・服務", "question": "職員が不妊治療に係る通院等のため勤務しないことが相当であると認められる特別休暇の名称を何というか。また、1の年において何日を超えない範囲内で取得できるか。", "answer": "短期出生サポート休暇／10日を超えない範囲", "keys": [["出生サポート", "出産サポート", "サポート休暇"], ["10日"]], "need": 2, "reject": [], "tts": "短期出生サポート休暇、10日を超えない範囲", "note": null}, {"id": "qa-12", "no": 12, "category": "県の施策・調査", "question": "「第2次茨城県総合計画〜『新しい茨城』への挑戦」では、「次世代を担う『人財』の育成と自立を支える社会づくり」の指標として、「茨城県小中義務教育学校における不登校児童生徒が、学校内外の機関等での相談・指導等を受けている割合」が示されているが、この指標の2025年度の目標値は何%か。", "answer": "100%", "keys": [["100%", "100パーセント", "100"]], "need": 1, "reject": [], "tts": "100パーセント", "note": null}, {"id": "qa-13", "no": 13, "category": "県の施策・調査", "question": "令和6年度の「全国学力・学習状況調査」の結果で、「小学校国語」「小学校算数」「中学校国語」「中学校数学」の4つの区分のうち、本県の平均正答率が全国の平均正答率を上回ったものを全て答えなさい。", "answer": "中学校国語", "keys": [["中学校国語", "中学国語", "中学校の国語", "中学の国語"]], "need": 1, "reject": ["小学校国語", "算数", "数学"], "tts": null, "note": null}, {"id": "qa-14", "no": 14, "category": "県の施策・調査", "question": "令和7年度の「全国学力・学習状況調査」の結果で、「小学校国語・算数・理科」「中学校国語・数学・理科」の6つの区分のうち、本県の平均正答率が全国の平均正答率を下回ったものを全て答えなさい。", "answer": "小学校算数", "keys": [["小学校算数", "小学算数", "小学校の算数", "算数"]], "need": 1, "reject": ["国語", "理科", "数学"], "tts": null, "note": null}, {"id": "qa-15", "no": 15, "category": "生徒指導・いじめ・安全", "question": "「いじめ防止対策推進法」に示された「いじめ」の定義を答えなさい。", "answer": "児童等に対して、当該児童等が在籍する学校に在籍している等、当該児童等と一定の人的関係にある他の児童等が行う心理的又は物理的な影響を与える行為（インターネットを通じて行われるものを含む）であって、当該行為の対象となった児童等が心身の苦痛を感じているもの", "keys": [["心理的", "物理的"], ["苦痛"], ["人的関係", "人間関係"], ["インターネット", "ネット"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-16", "no": 16, "category": "生徒指導・いじめ・安全", "question": "令和7年3月、茨城県教育委員会「校内フリースクールの在り方」に「校内フリースクールの定義」が3つ示されています。そのうちの2つは「専任職員が配置されていること」と「専用の教室が確保されていること」です。残りのもう1つを答えなさい。", "answer": "児童生徒の自己決定に基づく、個に応じた支援（学びの保障）が行われていること", "keys": [["自己決定"], ["個に応じ", "学びの保障", "支援"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-17", "no": 17, "category": "法規・服務", "question": "精神疾患による療養休暇の上限、および休職期間の上限を、それぞれ答えなさい。", "answer": "療養休暇は90日、休職期間は3年", "keys": [["90日", "90"], ["3年"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-18", "no": 18, "category": "人材育成・教職員", "question": "「給与事務の手引き」（令和7年4月）に示されている手当等について、当てはまる数字を答えなさい。①通勤手当が支給されるのは、通勤距離が片道何km以上のときか。②教員業務連絡指導手当のうち、主任手当は1日あたりいくら支給されるか。③小学2年生・3年生の複式学級の担任に支給される多学年学級手当は、1日あたりいくらか。", "answer": "①2km　②200円　③290円", "keys": [["2km", "2キロ", "2k"], ["200円", "200"], ["290円", "290"]], "need": 3, "reject": [], "tts": "1、2キロメートル。2、200円。3、290円", "note": null}, {"id": "qa-19", "no": 19, "category": "生徒指導・いじめ・安全", "question": "「児童生徒一人ひとりを守るための適切な指導・支援の一層の強化について」（令和7年6月18日 生支第366号 通知）では、児童生徒の状況把握について述べられている。そのうちの1つは、1人1台端末を活用し「いばらき心の健康観察」などによる児童生徒の状況把握を行うこととしているが、もう1つは何か。", "answer": "校内オンライン相談窓口", "keys": [["オンライン相談", "相談窓口", "校内オンライン"]], "need": 1, "reject": [], "tts": null, "note": null}, {"id": "qa-20", "no": 20, "category": "県の施策・調査", "question": "茨城県教育委員会が行っている令和7年度の主要事業名を答えなさい。①県内の中高生を対象として、グローバル社会で活躍できる「人財」の育成を目指し、オンライン英語講座のプログラムを2年間提供する育成事業。②理科授業の質の向上と探究的な活動の充実を図り、児童生徒の科学への興味・関心を高め、理科の学力向上に資する育成事業。③英語プレゼンテーションフォーラムの開催など、他者と協働しながら課題を解決し、自分の意見を英語で発信できる「人財」の育成を図る育成事業。", "answer": "①次世代グローバルリーダー育成事業\n②いばらきサイエンスキッズ育成事業\n③英語コミュニケーション能力育成事業", "keys": [["グローバルリーダー"], ["サイエンスキッズ"], ["英語コミュニケーション"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-21", "no": 21, "category": "不祥事防止・個人情報", "question": "次の文は、「教職員の不祥事根絶に向けた重点対策」の実施について（令和7年10月2日 教改第493号 通知）において示された、不祥事への重点対策である。当てはまる語句を答えなさい。飲酒運転：飲酒運転の根絶に向けた「何」の提出（毎年4月に実施）。体罰：児童生徒の端末への「何」のアイコン表示。盗撮：カメラなどの不審物の「何」。わいせつ行為：「何」の設置。", "answer": "①確認書　②ネット目安箱　③定期的な点検　④防犯カメラ", "keys": [["確認書"], ["目安箱"], ["点検"], ["防犯カメラ", "カメラの設置"]], "need": 4, "reject": [], "tts": null, "note": null}, {"id": "qa-22", "no": 22, "category": "法規・服務", "question": "「男性職員の育児休業等の取得促進及び『仕事・子育て両立支援ガイドブック』の改訂について」（令和7年4月14日 教総第76号 通知）について答えなさい。配偶者出産休暇は何日を超えない範囲で、利用期間はいつからいつまでか。", "answer": "5日を超えない範囲／産前（出産予定日前）16週から産後2週まで", "keys": [["5日"], ["16週"], ["2週"]], "need": 3, "reject": [], "tts": "5日を超えない範囲、産前16週から産後2週まで", "note": null}, {"id": "qa-23", "no": 23, "category": "法規・服務", "question": "「仕事・子育て両立支援ガイドブック」の改訂内容として、「家族看護休暇」が「家族看護等休暇」へ変更されたが、対象となる家族の範囲に何が追加されたか答えなさい。", "answer": "孫", "keys": [["孫", "まご"]], "need": 1, "reject": [], "tts": null, "note": null}, {"id": "qa-24", "no": 24, "category": "人材育成・教職員", "question": "令和4年12月19日 中央教育審議会答申「『令和の日本型学校教育』を担う教師の養成・採用・研修の在り方について」では、教職生活を通じた「新たな学びの姿」が4つ示されました。そのうち2つを答えなさい。", "answer": "○求められる知識技能が変わっていくことを意識した「学び続ける姿勢」\n○変化を前向きに受け止め、探究心を持ちつつ、自立的に学ぶという「主体的な姿勢」\n○新たな領域の専門性を身に付けるなど、一人一人の教師の個性に即した「個別最適な学び」\n○他者との対話や振り返りの機会を確保した「協働的な学び」", "keys": [["学び続ける"], ["主体的"], ["個別最適"], ["協働的", "協働"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-25", "no": 25, "category": "人材育成・教職員", "question": "令和5年2月に改訂された「茨城県公立の小学校等の校長及び教員の資質向上に関する指標」における、校長の項目6つを答えなさい。", "answer": "①学校経営　②学校管理　③教育計画　④人材育成及び服務監督　⑤連携・協力体制の構築　⑥職務遂行能力", "keys": [["学校経営"], ["学校管理"], ["教育計画"], ["人材育成", "服務監督"], ["連携", "協力体制"], ["職務遂行"]], "need": 5, "reject": [], "tts": null, "note": null}, {"id": "qa-26", "no": 26, "category": "特別支援教育", "question": "「適切な学びの場ガイドライン〜特別な教育的支援を必要とする児童生徒の学びの充実に向けて〜」（令和6年3月 茨城県教育委員会）では、校内委員会等における適切な学びの場の検討に至る段階的なプロセスが4つ示されている。そのうちの、プロセス4の項目内容を答えなさい。", "answer": "自立活動など特別の教育課程が編成できる、通級による指導や特別支援学級の必要性の検討", "keys": [["通級"], ["特別支援学級"], ["自立活動", "特別の教育課程"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-27", "no": 27, "category": "学校徴収金", "question": "「学校徴収金の取扱いに関するガイドライン〜市町村立学校における会計処理の適正化に向けて〜」（平成31年4月1日 茨城県教育委員会）では、「Ⅲ 学校徴収金に関する基本原則」として、学校が取り組む3つのことが示されている。3つ答えなさい。", "answer": "○学校徴収金の適正かつ効率的な執行を図る\n○公費に準じた適正な会計処理を行う\n○保護者に対して十分な説明責任を果たす", "keys": [["効率的", "執行"], ["公費"], ["説明責任"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-28", "no": 28, "category": "学校徴収金", "question": "「学校徴収金の適正な取扱い及び管理の徹底について」（令和6年9月30日 義教第1917号 通知）に示された、やむを得ず一時的に現金を保管する場合に作成するものは何か。また、執行状況の定期検査は年何回、いつを目安に行うか答えなさい。", "answer": "「現金保管記録簿」（管理職が金庫等で保管管理）／年3回、7月・12月・3月を目安に必ず行う", "keys": [["記録簿"], ["3回"], ["7月", "12月", "3月"]], "need": 3, "reject": [], "tts": "現金保管記録簿。定期検査は年3回、7月、12月、3月を目安に行う", "note": null}, {"id": "qa-29", "no": 29, "category": "生徒指導・いじめ・安全", "question": "「教育職員等による児童生徒性暴力等の防止等に関する法律」（令和3年6月）に示されている「児童生徒等への啓発・早期発見のための方策」を答えなさい。", "answer": "○何人からも児童生徒が性暴力等により自己の身体を侵害されることはあってはならないことを周知徹底する\n○教育職員等による児童生徒性暴力等があってはならないこと、及び被害を受けた児童生徒等に対して保護及び支援が行われること等について周知徹底する\n○定期的なアンケート調査や教育相談の実施、電話相談窓口の周知等により、児童生徒等が被害を訴えやすい体制を整えるとともに、地域、家庭と連携して児童生徒等を見守る", "keys": [["周知", "あってはならない"], ["アンケート", "教育相談", "電話相談", "相談窓口", "訴えやすい"], ["地域", "家庭", "見守"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-30", "no": 30, "category": "法規・服務", "question": "令和7年9月、「公立学校の教育職員の業務量の適切な管理その他教育職員の服務を監督する教育委員会が教育職員の健康及び福祉の確保を図るために講ずべき措置に関する指針」が改正され、「学校と教師の業務の3分類」が現行の14から19の業務として新たに示された。3つの分類を答えなさい。", "answer": "①学校以外が担うべき業務\n②教師以外が積極的に参画すべき業務\n③教師の業務だが負担軽減を促進すべき業務", "keys": [["学校以外"], ["教師以外"], ["負担軽減", "負担の軽減"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-31", "no": 31, "category": "法規・服務", "question": "「教師の『働きやすさ』と『働きがい』実現プラン」（令和7年1月）で、「目指す学校現場の姿　全ての子供たちへのより良い教育の実現」として示されていることを答えなさい。", "answer": "○長時間勤務の解消\n○教師の健康・福祉と、子供と向き合う時間の確保\n○「学びの専門職」としての資質・能力の向上\n（他に ○教職の魅力向上 ○多様で質の高い教職員集団の形成）", "keys": [["長時間勤務"], ["健康", "福祉", "向き合う時間"], ["専門職", "資質"], ["魅力"], ["多様で質の高い", "教職員集団"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-32", "no": 32, "category": "学校教育指導方針", "question": "「令和7年度 未来を拓く学ぶ力向上プロジェクト」（令和6年9月26日 義務教育課 事務連絡）の実施要項に示されている目的を答えなさい。", "answer": "子どもたち一人一人が自分自身で未来を切り拓くための「学ぶ力」を向上させる", "keys": [["学ぶ力"], ["未来を切り拓く", "切り拓く", "切り開く", "自分自身"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-33", "no": 33, "category": "生徒指導・いじめ・安全", "question": "「適切ないじめ対応に資するいじめ認知リーフレットを活用した職員研修の実施について」（令和7年8月4日 生支第514号）の「いじめ認知リーフレット」で、「いじめではないかと疑われる事案が発生したら、組織で動くことが重要」として示されている流れを答えなさい。", "answer": "①いじめ情報をキャッチ（情報収集）\n②組織的対応（学校いじめ対策組織）\n③再発防止（心のケア・見守り・再発防止）", "keys": [["キャッチ", "情報収集", "情報を集め"], ["組織的", "組織で", "対策組織"], ["再発防止", "心のケア", "見守り"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-34", "no": 34, "category": "不祥事防止・個人情報", "question": "「個人情報の適切な管理の徹底について」（令和7年4月4日 義教第24号）で、留意することとして示された4つの項目を答えなさい。", "answer": "①全教職員の個人情報に対する危機管理意識を高める（コンプライアンス研修への位置付け）\n②個人情報を持ち出さない\n③個人情報の保管と管理を見直す\n④個人情報取扱規程と情報セキュリティポリシーを定期的に見直す", "keys": [["危機管理", "コンプライアンス"], ["持ち出さ", "持ち出し"], ["保管"], ["規程", "規定", "セキュリティポリシー", "ポリシー"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-35", "no": 35, "category": "県の施策・調査", "question": "本県では、新規採用教職員並びに経験年数の少ない教職員に対する支援の充実を図るため、学校での勤務から社会人としての生活、私生活に至る生活全般を対象として相談窓口を設置した。その名称を答えなさい。また、どこに設置されたかを答えなさい。", "answer": "悩み事ワンストップ相談窓口／各教育事務所の「いじめ・体罰サポートセンター」内", "keys": [["ワンストップ", "悩み事"], ["教育事務所", "サポートセンター"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-36", "no": 36, "category": "生徒指導・いじめ・安全", "question": "「誰一人取り残されない学びの保障に向けた不登校対策」（COCOLOプラン、令和5年3月 文部科学省）に示された、3つの「目指す姿」を答えなさい。", "answer": "①不登校の児童生徒全ての学びの場を保障し、学びたいと思った時に学べる環境を整える\n②心の小さなSOSを見逃さず、「チーム学校」で支援する\n③学校の風土の「見える化」を通して、学校を「みんなが安心して学べる」場所にする", "keys": [["学びの場", "学べる環境", "学びたい"], ["sos", "エスオーエス", "見逃さ", "チーム学校"], ["見える化", "風土", "安心して学べる"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-37", "no": 37, "category": "法規・服務", "question": "「公立の義務教育諸学校等の教育職員の給与等に関する特別措置法等の一部を改正する法律」（令和7年6月成立）の概要で示された3つの柱を答えなさい。また、その具体的な内容を2つ答えなさい。", "answer": "①学校における働き方改革の一層の推進\n②組織的な学校運営及び指導の促進\n③教員の処遇の改善\n具体的な内容：「主務教諭の新設」「教職調整額を10%に引き上げ」「学級担任に加算」など", "keys": [["働き方改革"], ["組織的"], ["処遇"], ["主務教諭"], ["教職調整額", "10%", "学級担任", "加算"]], "need": 4, "reject": [], "tts": null, "note": null}, {"id": "qa-38", "no": 38, "category": "生徒指導・いじめ・安全", "question": "「児童生徒等の安全・安心な環境の確保に向けた取組について」（令和7年6月23日 7文科教第589号 周知）に示された、対応に係る主な事項の5つを答えなさい。", "answer": "①通学路等の安全対策\n②不審者対策も含めた学校等の防犯対策\n③児童生徒の非行防止\n④子供同士のトラブル対応（保護者等への対応を含む）\n⑤犯罪被害や交通事故を受けた保護者・児童生徒等への支援、心のケア", "keys": [["通学路"], ["防犯", "不審者"], ["非行"], ["トラブル"], ["心のケア", "被害", "交通事故"]], "need": 4, "reject": [], "tts": null, "note": null}, {"id": "qa-39", "no": 39, "category": "生徒指導・いじめ・安全", "question": "「学校事故対応に関する指針」の改訂について（令和6年3月26日 5文科教第1980号 通知）で、主な改訂内容として「1 事故発生の未然防止対応」に示された4つの項目を答えなさい。", "answer": "①重大事故・ヒヤリハット事例の共有と活用\n②危機管理マニュアルの策定・見直し\n③教職員の危機管理に関する資質の向上\n④安全点検の実施及び安全教育の充実", "keys": [["ヒヤリハット", "重大事故"], ["マニュアル"], ["資質"], ["安全点検", "安全教育"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-40", "no": 40, "category": "人材育成・教職員", "question": "「小中学校等の新規採用教職員の育成について」（令和6年12月19日 義教第2751号 県教育長 通知）で、様々な期待や不安を抱えていると予想される新規採用教職員への配慮として示された4つの内容を答えなさい。", "answer": "①新規採用教職員の状況を把握し、多様な視点からメンタルヘルスケアに努める\n②指導体制が円滑かつ効果的に機能しているか確認し、必要に応じて適切に支援する\n③希望や不安を適切に把握するとともに、将来へのモチベーションを高めるフィードバックを行い、次年度に向けての見通しを伝える\n④関わる全ての教職員で支援に努める", "keys": [["メンタルヘルス", "状況を把握"], ["指導体制"], ["希望", "不安", "フィードバック", "モチベーション", "見通し"], ["全ての教職員", "すべての教職員", "全教職員", "関わる全て"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-41", "no": 41, "category": "法規・服務", "question": "教員評価に係る自己申告書は、コンプライアンス、働き方改革、ICT活用に加え、新たな1つの項目が追加されている。その名称は何か答えなさい。", "answer": "改革意欲", "keys": [["改革意欲"]], "need": 1, "reject": [], "tts": null, "note": null}, {"id": "qa-42", "no": 42, "category": "人材育成・教職員", "question": "「校務DX」のねらいは何か、答えなさい。", "answer": "校務全般をデジタル技術によって効率化することで、教職員の負担を軽減するとともに、教育活動の質を向上・高度化していくこと", "keys": [["負担", "効率化"], ["質を向上", "質の向上", "高度化"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-43", "no": 43, "category": "法規・服務", "question": "「公立の義務教育諸学校等の教育職員の給与等に関する特別措置法等の一部を改正する法律」（令和7年6月成立）で新設される「主務教諭」の業務と、対象となる職員を答えなさい。", "answer": "業務：若手教員への支援、学校内外の連携\n対象：教諭と主幹教諭の間の中堅教諭", "keys": [["若手", "連携"], ["中堅", "主幹教諭"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-44", "no": 44, "category": "学校教育指導方針", "question": "令和7年度 茨城県学校教育指導方針の「学習評価の充実について」に示された、不登校児童生徒が欠席中に行った学習の成果を成績に反映する際に満たさなければならない要件3つを、全て答えなさい。", "answer": "①学習の計画・内容が、在籍する学校の教育課程に照らして適切と認められる\n②学校と保護者等の間に十分な連携協力体制が保たれ、学習活動の状況を定期的・継続的に把握する\n③訪問による対面指導やICTを活用したオンラインでの指導・相談を通して、学習活動の状況等を定期的・継続的に把握し、適切な関わりを維持する", "keys": [["教育課程", "適切と認め", "計画"], ["保護者", "連携協力", "連携"], ["訪問", "対面", "ict", "オンライン", "関わりを維持"]], "need": 3, "reject": [], "tts": null, "note": null}, {"id": "qa-45", "no": 45, "category": "学校教育指導方針", "question": "令和7年度 茨城県学校教育指導方針では、「魅力ある学校・学級」とはどのような学校・学級と示されているか。また、どのように取り組めばよいか、答えなさい。", "answer": "【どのような】児童生徒が楽しく安心して通うことができ、もっている力を発揮できる学校・学級\n【どのように】特別活動等による「集団づくり」や各教科の「授業づくり」を通して、全ての児童生徒に活躍の場と互いに認め合う機会を確保する", "keys": [["安心", "楽しく", "力を発揮"], ["集団づくり", "授業づくり", "活躍の場", "認め合う"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-46", "no": 46, "category": "不祥事防止・個人情報", "question": "「校外学習における個人情報の適切な管理の徹底について」（令和7年4月30日 義教第383号 通知）で、修学旅行や遠足、社会科見学など校外において教育活動を行う際の留意点として示されていること2つを答えなさい。", "answer": "①個人情報については、必要に応じて電子データで確認する方法を用いるなど、原則、紙媒体で個人情報を校外へ持ち出さないこと\n②個人情報を電子データで確認する方法を用いる場合は、市町村の情報セキュリティポリシーに則って、共有ドライブを使用するなど、リスクが最小限となるよう工夫すること", "keys": [["紙媒体", "紙", "持ち出さ"], ["セキュリティポリシー", "共有ドライブ", "リスク"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-47", "no": 47, "category": "県の施策・調査", "question": "「令和7年度 義務教育課等主要施策等の概要」（令和7年7月29日）に示された、経験豊富で力量のある再任用教員を拠点校に配置し、重大な問題や欠員等の不測の事態が生じた学校を兼務発令によりサポートすることで、問題の早期解決や未補充の解消を図ることを目的として、令和8年4月から配置される加配の名称を答えなさい。また、その配置期間を答えなさい。", "answer": "名称：再任用学校運営サポーター\n期間：問題が一定の収束を迎えるまで・補充が配置されるまで", "keys": [["サポーター"], ["収束", "補充"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-48", "no": 48, "category": "法規・服務", "question": "「職員の育児休業等に関する条例等の一部改正について」（令和7年6月30日 教総第490号 通知）で、部分休業制度はどのように改正されたかを答えなさい。", "answer": "○1日につき2時間を超えない範囲で取得できる部分休業を「第1部分休業」とし、1年につき条例で定める時間を超えない範囲で取得できる「第2部分休業」が新設（第2は1年に77時間30分、1時間単位）\n○取得できる時間は「制限なし」（勤務時間の始め又は終わりから、に変更）", "keys": [["第2部分休業", "第2", "新設"], ["2時間", "77時間", "制限なし", "制限無し", "1時間単位"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-49", "no": 49, "category": "法規・服務", "question": "学校における教師による性暴力の根絶は喫緊の課題ですが、その根拠となる法令を答えなさい。", "answer": "教育職員等による児童生徒性暴力等の防止等に関する法律", "keys": [["性暴力"]], "need": 1, "reject": [], "tts": null, "note": null}, {"id": "qa-50", "no": 50, "category": "法規・服務", "question": "「いじめの未然防止」を進めていくにあたり、根拠となる法令を2つ答えなさい。", "answer": "いじめ防止対策推進法／茨城県いじめの根絶を目指す条例／茨城県いじめ防止基本方針", "keys": [["防止対策推進法", "推進法"], ["根絶を目指す条例", "根絶", "条例"], ["基本方針"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-51", "no": 51, "category": "法規・服務", "question": "時間外在校等時間が特に長時間となっている教職員に対して、校長として、どのような法令や指針に基づき、どのように指導するかを答えなさい。", "answer": "公立の義務教育諸学校等の教育職員の給与等に関する特別措置法（給特法）／公立学校の教師の勤務時間の上限に関するガイドライン（文部科学省）", "keys": [["給特法", "特別措置法"], ["ガイドライン", "上限"]], "need": 2, "reject": [], "tts": null, "note": null}, {"id": "qa-52", "no": 52, "category": "生徒指導・いじめ・安全", "question": "体罰の防止は喫緊の課題となっています。「教職員の不祥事根絶に向けた教育長メッセージの周知について」（令和7年11月28日 教改第653号）に示された、体罰防止に向けた具体的取組を2つ答えなさい。", "answer": "①全教職員を対象に、体罰について改めて考えるとともに、アンガーマネジメントに資する研修を行う\n②児童生徒の学習者用端末に「ネット目安箱」のアイコンを表示し、「いじめ・体罰解消サポートセンター」に相談しやすい環境を整える", "keys": [["アンガー", "研修"], ["目安箱", "アイコン", "サポートセンター"]], "need": 2, "reject": [], "tts": null, "note": null}]};
+</script>
+<script>// 一問一答の合否判定（ローカル・キーワード方式）
+// window.KotoQA.judge(q, text) → { pass, hits:[語群index], missing:[語群index], rejected:[語], said:[代表語], lack:[代表語], text }
+// 正規化: NFKC → 小文字 → 空白・句読点除去 → 漢数字→算用数字（「三年」→「3年」「九十日」→「90日」）
+(function(){
+  const KD = {"〇":0,"零":0,"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9};
+  function kanjiNum(s){
+    // 一〜九千九百九十九までの素朴な変換。「十」「百」「千」を含む並びと単独の数字漢字を変換する
+    return s.replace(/[〇零一二三四五六七八九十百千]+/g, m => {
+      if(m === "十") return "10";
+      let total = 0, cur = 0, hasUnit = false;
+      for(const ch of m){
+        if(ch === "十"){ total += (cur||1)*10; cur = 0; hasUnit = true; }
+        else if(ch === "百"){ total += (cur||1)*100; cur = 0; hasUnit = true; }
+        else if(ch === "千"){ total += (cur||1)*1000; cur = 0; hasUnit = true; }
+        else cur = cur*10 + KD[ch];
+      }
+      total += cur;
+      // 回答側と正答側を同じ規則で正規化するので、「一人一人」→「1人1人」のような変換も問題ない
+      return String(total);
+    });
+  }
+  function norm(s){
+    s = String(s||"").normalize("NFKC").toLowerCase();
+    s = s.replace(/パーセント|ぱーせんと|％/g, "%");
+    s = s.replace(/キロメートル|きろめーとる|キロ/g, "km");
+    s = s.replace(/[\s　、。・，．,.「」『』（）()［］\[\]【】〈〉《》〔〕"'’“”:：;；!！?？~〜ー\-–—／/]/g, "");
+    s = kanjiNum(s);
+    return s;
+  }
+  function judge(q, text){
+    const t = norm(text);
+    const hits = [], missing = [], said = [], lack = [];
+    q.keys.forEach((grp, i) => {
+      const hit = grp.some(k => { const nk = norm(k); return nk && t.indexOf(nk) >= 0; });
+      if(hit){ hits.push(i); said.push(grp[0]); } else { missing.push(i); lack.push(grp[0]); }
+    });
+    const rejected = (q.reject||[]).filter(r => t.indexOf(norm(r)) >= 0 && !q.keys.some(g => g.some(k => norm(k).indexOf(norm(r))>=0)));
+    const need = q.need || q.keys.length;
+    const pass = hits.length >= need && rejected.length === 0;
+    return { pass, hits, missing, rejected, said, lack, need, total: q.keys.length, text };
+  }
+  // 「次へ／やめる／もう一度」の聞き取り
+  function intent(text){
+    const t = norm(text);
+    if(!t) return null;
+    if(/やめ|止め|終了|しゅうりょう|ストップ|すとっぷ|おわり|終わり|いいえ|いや|休憩|きゅうけい|中止/.test(t)) return "stop";
+    if(/もう1度|もういちど|もう1回|もういっかい|繰り返|くりかえ|再度|もっかい/.test(t)) return "again";
+    if(/はい|ハイ|次|つぎ|進|すすむ|お願い|おねがい|オッケー|おっけー|ok|いいよ|行く|いく|どうぞ|続け|つづけ|ゴー|go/.test(t)) return "next";
+    return null;
+  }
+  window.KotoQA = { norm, judge, intent, kanjiNum };
+})();
+</script>
+<script>
+(function(){
+  const D = window.KOTO_QA, QS = D.questions, K = window.KotoQA;
+  const STORE = "koto_qa_v1";
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+  // 出題間隔（この問題数だけ他の問題をはさんでから再出題）
+  const GAP_AGAIN = 4;     // 不合格 → 4問後にもう一度
+  const GAP_CONFIRM = 12;  // 不合格だった問題が合格 → 12問後に確認（忘れた頃）
+  let state = load(), prefs = loadPrefs();
+  let running = false, cur = null, phase = "idle", rec = null, fallbackMode = !SR, forcedId = null;
+  let session = { asked:0, ok:0, ng:0 };
+  let finalText = "", interimText = "";
+
+  function load(){ try{ return JSON.parse(localStorage.getItem(STORE)||"{}"); }catch(e){ return {}; } }
+  function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
+  function loadPrefs(){ try{ return JSON.parse(localStorage.getItem(STORE+"_prefs")||"{}"); }catch(e){ return {}; } }
+  function savePrefs(){ try{ localStorage.setItem(STORE+"_prefs", JSON.stringify(prefs)); }catch(e){} }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+  function $(id){ return document.getElementById(id); }
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  function recOf(id){ return state[id] || (state[id] = {st:"new", due:0, tries:0, ok:0, ng:0}); }
+  function tick(){ return state._tick || 0; }
+
+  // ─ 読み上げ（TTS）: 女性／男性の自然な声を選ぶ ─
+  const NOVELTY = /Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bells|Bubbles|Bad News|Boing|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Albert|Fred|Junior|Kathy|Ralph/i;
+  const RANK = {
+    female: [/Kyoko.*(Premium|プレミアム)/i, /premium.*Kyoko/i, /Kyoko.*(Enhanced|拡張)/i, /enhanced.*Kyoko/i, /Nanami.*Natural/i, /Google 日本語/i, /Nanami/i, /Kyoko/i, /O-Ren/i, /Ayumi/i, /Haruka/i],
+    male:   [/Otoya.*(Premium|プレミアム)/i, /premium.*Otoya/i, /Otoya.*(Enhanced|拡張)/i, /enhanced.*Otoya/i, /Keita.*Natural/i, /Keita/i, /Otoya/i, /Ichiro/i, /Hattori/i],
+  };
+  let voices = [];
+  function refreshVoices(){ voices = synth ? synth.getVoices().filter(v => /^ja/i.test(v.lang) && !NOVELTY.test(v.name)) : []; updateVoiceName(); }
+  function findVoice(g){ for(const re of RANK[g]){ const v = voices.find(v => re.test(v.name) || re.test(v.voiceURI||"")); if(v) return v; } return null; }
+  function pickVoice(){ const g = prefs.gender||"female"; return findVoice(g) || findVoice(g==="female"?"male":"female") || voices[0] || null; }
+  function updateVoiceName(){
+    const n = $("vname"); if(!n) return;
+    const g = prefs.gender||"female", v = findVoice(g);
+    if(!voices.length){ n.textContent = "（日本語の声が見つかりません）"; return; }
+    n.textContent = v ? "使用中: " + v.name : (g==="male" ? "男性の声が未インストールのため女性の声で読みます" : "女性の声が見つからないため別の声で読みます");
+  }
+  if(synth){ refreshVoices(); synth.onvoiceschanged = refreshVoices; }
+  let speakToken = 0;
+  function speak(text, opts){
+    opts = opts||{};
+    return new Promise(resolve => {
+      if(!synth || !text){ resolve(); return; }
+      synth.cancel();
+      const my = ++speakToken;
+      const chunks = String(text).replace(/\n+/g,"。").split(/(?<=[。？！])/).map(s=>s.trim()).filter(Boolean);
+      if(!chunks.length){ resolve(); return; }
+      const v = pickVoice(), rate = parseFloat(prefs.rate||"0.95");
+      const male = v && RANK.male.some(re => re.test(v.name) || re.test(v.voiceURI||""));
+      let i = 0, done = false;
+      const finish = () => { if(!done){ done=true; resolve(); } };
+      const next = () => {
+        if(my !== speakToken){ finish(); return; }
+        if(i >= chunks.length){ finish(); return; }
+        const u = new SpeechSynthesisUtterance(chunks[i++]);
+        u.lang="ja-JP"; if(v) u.voice=v; u.rate=rate; u.pitch = male?0.95:1.0;
+        u.onend = () => setTimeout(next, opts.pause!=null?opts.pause:300);
+        u.onerror = next;
+        synth.speak(u);
+      };
+      next();
+      setTimeout(finish, String(text).length*320/rate + 4000);
+    });
+  }
+  function stopSpeak(){ speakToken++; if(synth) synth.cancel(); }
+
+  // ─ 聞き取り: 話し終えて少し黙ると自動で終わる ─
+  function listen(opt){
+    opt = opt||{};
+    return new Promise(resolve => {
+      if(!SR || fallbackMode){ resolve(null); return; }
+      let text = "", interim = "", ended = false, silence = null, hard = null;
+      const end = () => { if(ended) return; ended = true; clearTimeout(silence); clearTimeout(hard); try{ r.onend=null; r.stop(); }catch(e){} rec=null; resolve((text + interim).trim()); };
+      const r = new SR(); rec = r;
+      r.lang="ja-JP"; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+      r.onresult = e => {
+        interim = "";
+        for(let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; if(e.results[i].isFinal) text += t; else interim += t; }
+        if(opt.onText) opt.onText(text, interim);
+        clearTimeout(silence); silence = setTimeout(end, opt.silenceMs||2600);
+      };
+      r.onerror = e => {
+        if(e.error==="not-allowed" || e.error==="service-not-allowed"){ fallbackMode=true; toast("マイクが許可されていません。入力に切り替えます"); ended=true; clearTimeout(silence); clearTimeout(hard); rec=null; resolve(null); return; }
+        if(e.error==="no-speech"){ end(); return; }
+        if(e.error==="network"){ toast("音声認識サービスに接続できません（ネット接続を確認）"); }
+      };
+      r.onend = () => { if(!ended){ if(text||interim) end(); else { try{ r.start(); }catch(err){ end(); } } } };
+      try{ r.start(); }catch(err){ fallbackMode=true; resolve(null); return; }
+      hard = setTimeout(end, opt.maxMs||60000);
+      if(opt.noSpeechMs) silence = setTimeout(() => { if(!text && !interim) end(); }, opt.noSpeechMs);
+      listen.stopNow = end;
+    });
+  }
+  function stopListen(){ if(listen.stopNow) listen.stopNow(); }
+
+  // ─ 出題順（プログラム学習）─
+  // new: 未出題 / learn: 不合格で再出題待ち / review: 合格したが忘れた頃に確認 / done: 合格確定
+  function pickNext(){
+    if(forcedId){ const q = QS.find(x=>x.id===forcedId); forcedId=null; if(q) return q; }
+    const t = tick();
+    const pending = QS.filter(q => recOf(q.id).st!=="done");
+    if(!pending.length) return null;
+    const due = pending.filter(q => recOf(q.id).st!=="new" && recOf(q.id).due <= t).sort((a,b)=>recOf(a.id).due-recOf(b.id).due);
+    if(due.length) return due[0];
+    const fresh = pending.filter(q => recOf(q.id).st==="new");
+    if(fresh.length) return fresh[0];
+    return pending.sort((a,b)=>recOf(a.id).due-recOf(b.id).due)[0];
+  }
+  let prevRec = null; // 再判定で取り消せるよう、記録前の状態を控える
+  function record(q, pass, redo){
+    const r = recOf(q.id);
+    if(redo && prevRec && prevRec.id===q.id) Object.assign(r, prevRec.r); else prevRec = { id:q.id, r: JSON.parse(JSON.stringify(r)) };
+    const t = redo ? tick() : (state._tick = tick()+1);
+    r.tries++; r.last = Date.now(); r.lastPass = pass;
+    if(pass){ r.ok++; r.st = (r.st==="new"||r.st==="review") ? "done" : "review"; r.due = t + GAP_CONFIRM; }
+    else { r.ng++; r.st = "learn"; r.due = t + GAP_AGAIN; }
+    save();
+  }
+  function counts(){
+    const c = {done:0, review:0, learn:0, new:0};
+    QS.forEach(q => c[recOf(q.id).st]++);
+    return c;
+  }
+
+  // ─ 一覧 ─
+  const STL = {done:"合格", review:"確認待ち", learn:"再出題", new:""};
+  function renderList(){
+    const c = counts(), n = QS.length;
+    let h = '<h2>進み具合</h2><div class="prog"><b>'+c.done+'</b> / '+n+' 問 合格　<span style="color:var(--ochre)">確認待ち '+c.review+'</span>　<span style="color:var(--ng)">再出題 '+c.learn+'</span>　未出題 '+c.new+
+      '<div class="trk"><i class="d" style="width:'+(c.done/n*100)+'%"></i><i class="r" style="width:'+(c.review/n*100)+'%"></i><i class="l" style="width:'+(c.learn/n*100)+'%"></i></div></div>';
+    h += '<h2>問題一覧（押すと次にその問題を出します）</h2>';
+    for(const cat of D.categories){
+      h += '<div class="cat">'+esc(cat)+'</div>';
+      for(const q of QS.filter(x=>x.category===cat)){
+        const r = recOf(q.id);
+        h += '<button class="qbtn'+(cur&&cur.id===q.id?' active':'')+'" data-id="'+q.id+'"><span class="no">'+q.no+'</span><span class="t">'+esc(q.question.slice(0,40))+'</span>'+(STL[r.st]?'<span class="st '+r.st+'">'+STL[r.st]+(r.ng?' ×'+r.ng:'')+'</span>':'')+'</button>';
+      }
+    }
+    $("list").innerHTML = h;
+    $("list").querySelectorAll(".qbtn").forEach(b => b.addEventListener("click", () => { forcedId = b.dataset.id; if(running && phase==="wait") goNext(); else if(!running) startSession(); else toast("この問題の後に出します"); }));
+  }
+
+  // ─ 開始画面 ─
+  function renderHome(){
+    const c = counts();
+    $("stage").innerHTML = `
+      <section class="card">
+        <div class="eyebrow"><span class="pill">${QS.length}問</span><span>${esc(D.source)}</span></div>
+        <p class="empty">${c.done===QS.length ? "全問合格です。「記録を消す」で最初からやり直せます。" : c.done+c.review+c.learn>0 ? "前回の続きから始めます（合格 "+c.done+" ／ 残り "+(QS.length-c.done)+"）。" : "問題を読み上げます。声で答えると、合格か不合格かを声でお伝えし、次に進むかどうかをお聞きします。"}</p>
+        <ol class="how">
+          <li>「開始」を押す（初回はマイクの許可が出ます）。あとは手を使わず声だけで進められます。</li>
+          <li>読み上げのあと、答えを話す。2〜3秒黙ると自動で答え終わりになります。</li>
+          <li>合格／不合格を声で返します。不合格なら正解を読み上げます。</li>
+          <li>「次の問題に進みますか」と聞くので、<b>「はい」</b>／<b>「やめる」</b>／<b>「もう一度」</b>と答える。</li>
+          <li>不合格の問題は ${GAP_AGAIN} 問後にもう一度、そこで合格しても ${GAP_CONFIRM} 問後に確認します。全問が合格になるまで続きます。</li>
+        </ol>
+        <div class="actions"><button class="btn primary big" id="btnBegin">${c.done+c.review+c.learn>0?"続きから開始":"開始"}</button><button class="btn" id="btnTestVoice">声を試す</button></div>
+        <div class="settings">
+          <label>質問役の声 <select id="voiceSel"><option value="female">女性</option><option value="male">男性</option></select></label><span class="vname" id="vname"></span>
+          <label>速さ <select id="rateSel"><option value="0.85">ゆっくり</option><option value="0.95">ふつう</option><option value="1.05">速め</option></select></label>
+          <label><input type="checkbox" id="twice"> 質問を2回読む（本番と同じ）</label>
+          <label><input type="checkbox" id="autoNext"> 聞かずに自動で次へ</label>
+          <label><input type="checkbox" id="hideQ"> 問題文を隠す（聞き取り練習）</label>
+        </div>
+        <p class="vhelp" id="vhelp"></p>
+        <p class="note" id="support"></p>
+        <p class="src">${esc(D.note)}</p>
+      </section>`;
+    bindSettings();
+    $("btnBegin").addEventListener("click", startSession);
+    $("btnTestVoice").addEventListener("click", () => speak("それでは、質問を始めます。落ち着いてお答えください。"));
+    showSupport(); renderList();
+  }
+  function bindSettings(){
+    refreshVoices();
+    const vs=$("voiceSel"), rs=$("rateSel"), tw=$("twice"), an=$("autoNext"), hq=$("hideQ");
+    if(vs){ vs.value=prefs.gender||"female"; vs.addEventListener("change", e => { prefs.gender=e.target.value; savePrefs(); updateVoiceName(); }); }
+    if(rs){ rs.value=prefs.rate||"0.95"; rs.addEventListener("change", e => { prefs.rate=e.target.value; savePrefs(); }); }
+    if(tw){ tw.checked=!!prefs.twice; tw.addEventListener("change", e => { prefs.twice=e.target.checked; savePrefs(); }); }
+    if(an){ an.checked=!!prefs.autoNext; an.addEventListener("change", e => { prefs.autoNext=e.target.checked; savePrefs(); }); }
+    if(hq){ hq.checked=!!prefs.hideQ; hq.addEventListener("change", e => { prefs.hideQ=e.target.checked; savePrefs(); const q=$("qtext"); if(q) q.classList.toggle("hidden-q", e.target.checked && phase!=="result"); }); }
+    const help = $("vhelp"); if(help){
+      const isMac = /Mac/i.test(navigator.platform||"") || /Macintosh/i.test(navigator.userAgent);
+      help.innerHTML = isMac ? "より自然な声にするには、Mac の<b>システム設定 › アクセシビリティ › 読み上げコンテンツ › システムの声 › 管理</b>で日本語の <b>Kyoko（プレミアム）</b>と <b>Otoya（プレミアム）</b>をダウンロードしてください。" : "Android は Google の日本語音声、Windows は Edge（Nanami／Keita）が自然に読みます。";
+    }
+  }
+  function showSupport(){
+    const s=$("support"); if(!s) return;
+    if(!SR) s.innerHTML = "このブラウザは音声認識に対応していません（Firefox・LINE内ブラウザなど）。回答は<b>キーボード入力</b>になります。Chrome・Safari を推奨します。";
+    else if(!synth) s.textContent = "読み上げ機能が使えないため、問題文は画面で読んでください。";
+    else s.textContent = "";
+  }
+  (function detectInApp(){
+    const ua = navigator.userAgent||"";
+    const isLine = /\bLine\//i.test(ua), isAndroidWV = /Android/i.test(ua) && (/\bwv\b/.test(ua)||isLine), isIOSInApp = /iPhone|iPad/i.test(ua) && !/Safari\//i.test(ua);
+    if(!(isLine||isAndroidWV||isIOSInApp)) return;
+    const box=$("inapp"); let h = "<span><b>このままではマイクが使えません。</b>";
+    if(/Android/i.test(ua)){ h += " 右上の「︙」→「他のアプリで開く」→ <b>Chrome</b> を選んでください。</span>"; if(/^https?:/.test(location.href)) h += '<a class="btn" href="intent://'+location.href.replace(/^https?:\/\//,"")+'#Intent;scheme=https;package=com.android.chrome;end">Chromeで開く</a>'; }
+    else h += " 右下の共有ボタン →「<b>Safariで開く</b>」を選んでください。</span>";
+    box.innerHTML=h; box.hidden=false;
+  })();
+
+  // ─ セッション ─
+  async function startSession(){
+    if(running) return;
+    running = true; session = {asked:0, ok:0, ng:0};
+    const c = counts();
+    if(c.done===QS.length){ running=false; toast("全問合格済みです。「記録を消す」で最初から"); return; }
+    if(c.done+c.review+c.learn===0 && !forcedId) await speak(D.intro);
+    goNext();
+  }
+  async function goNext(){
+    if(!running) return;
+    const q = pickNext();
+    if(!q){ finishAll(); return; }
+    cur = q; phase = "read"; finalText=""; interimText="";
+    renderQuestion();
+    renderList();
+    const r = recOf(q.id);
+    const lead = r.st==="learn" ? "もう一度お聞きします。" : r.st==="review" ? "確認です。" : "";
+    const qtext = q.question;
+    await speak(lead + "第" + q.no + "問。" + qtext + (prefs.twice ? " 繰り返します。" + qtext : "") + " どうぞ。", {});
+    if(!running || cur!==q) return;
+    await answerPhase();
+  }
+  function renderQuestion(){
+    const q = cur, r = recOf(q.id);
+    $("stage").innerHTML = `
+      <section class="card" id="qcard">
+        <div class="eyebrow"><span class="pill">第${q.no}問</span><span>${esc(q.category)}</span>${r.tries?'<span>'+(r.st==="learn"?"再出題":"確認")+'（これまで ○'+r.ok+' ×'+r.ng+'）</span>':''}<span style="margin-left:auto">今回 ${session.asked}問 ○${session.ok} ×${session.ng}</span></div>
+        <p class="qtext ${prefs.hideQ?'hidden-q':''}" id="qtext">${esc(q.question)}</p>
+        <div class="console">
+          <span class="status" id="status"><b>読み上げています。</b></span>
+          <span class="ctrls">
+            <button class="btn" id="btnReread">聞き直す</button>
+            <button class="btn primary" id="btnDone" hidden>答え終わり</button>
+            <button class="btn danger" id="btnQuit">やめる</button>
+          </span>
+        </div>
+        <div class="tr" id="trwrap" hidden><div class="lbl">あなたの答え（文字起こし）</div><div class="trbox" id="trbox"></div></div>
+        <div id="result"></div>
+      </section>`;
+    $("btnReread").addEventListener("click", async () => { stopListen(); phase="read"; setStatus("<b>もう一度読み上げます。</b>"); await speak("第"+q.no+"問。"+q.question+" どうぞ。"); if(cur===q && running) answerPhase(); });
+    $("btnDone").addEventListener("click", () => { if(fallbackMode){ submitFallback(); } else stopListen(); });
+    $("btnQuit").addEventListener("click", () => stopSession(true));
+  }
+  function setStatus(h){ const s=$("status"); if(s) s.innerHTML=h; }
+  async function answerPhase(){
+    const q = cur; phase = "answer";
+    $("trwrap").hidden = false; $("btnDone").hidden = false;
+    if(fallbackMode){
+      $("trbox").outerHTML = '<textarea id="trbox" placeholder="ここに答えを入力して「答え終わり」（Enter）"></textarea>';
+      $("trbox").addEventListener("keydown", e => { if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); submitFallback(); } });
+      $("trbox").focus();
+      setStatus("<b>答えを入力してください。</b>");
+      return;
+    }
+    setStatus('<span class="dot"></span><b>どうぞ。</b>答え終わって2〜3秒黙ると、自動で判定します。');
+    const text = await listen({ silenceMs: 2800, maxMs: 70000, noSpeechMs: 15000, onText: (t,i) => { const b=$("trbox"); if(b&&b.tagName!=="TEXTAREA") b.innerHTML = esc(t)+'<span class="interim">'+esc(i)+'</span>'; } });
+    if(!running || cur!==q || phase!=="answer") return;
+    if(text===null){ answerPhase(); return; } // マイク不可 → 入力に切替
+    await judgeAndTell(q, text);
+  }
+  function submitFallback(){ const b=$("trbox"); if(!b) return; const t=(b.value||"").trim(); if(!t){ toast("答えを入力してください"); return; } judgeAndTell(cur, t); }
+  async function judgeAndTell(q, text){
+    phase = "result"; $("btnDone").hidden = true;
+    const b=$("trbox"); if(b && b.tagName!=="TEXTAREA") b.textContent = text;
+    const res = K.judge(q, text);
+    record(q, res.pass); session.asked++; if(res.pass) session.ok++; else session.ng++;
+    renderResult(q, res, text); renderList();
+    $("qtext").classList.remove("hidden-q");
+    let say;
+    if(res.pass){
+      say = "合格です。";
+      if(res.missing.length && res.lack.length) say += " さらに、" + res.lack.join("、") + "、も言えるとよいでしょう。";
+    } else if(res.rejected.length){
+      say = "不合格です。" + res.rejected.join("、") + "、は含まれません。正解は、" + (q.tts||q.answer) + "。";
+    } else if(res.hits.length){
+      say = "惜しい、不合格です。" + res.said.join("、") + "、は言えました。" + res.lack.join("、") + "、が抜けています。正解は、" + (q.tts||q.answer) + "。";
+    } else {
+      say = "不合格です。正解は、" + (q.tts||q.answer) + "。";
+    }
+    await speak(say.replace(/[①②③④⑤⑥○※]/g,"").replace(/\n+/g,"。"));
+    if(!running || cur!==q) return;
+    const c = counts();
+    if(c.done===QS.length){ finishAll(); return; }
+    if(prefs.autoNext){ await sleep(900); if(running && cur===q) goNext(); return; }
+    await askContinue(q);
+  }
+  async function askContinue(q, second){
+    phase = "wait";
+    setStatus('<span class="dot"></span><b>次の問題に進みますか？</b>「はい」「やめる」「もう一度」で答えてください（ボタンでも可）。');
+    await speak(second ? "聞き取れませんでした。次に進みますか。はい、か、やめる、で答えてください。" : "次の問題に進みますか。はい、か、やめる、で答えてください。");
+    if(!running || cur!==q || phase!=="wait") return;
+    if(fallbackMode) return; // ボタンで操作
+    const t = await listen({ silenceMs: 1500, maxMs: 10000, noSpeechMs: 7000 });
+    if(!running || cur!==q || phase!=="wait") return;
+    const it = K.intent(t||"");
+    if(it==="next") goNext();
+    else if(it==="stop") stopSession(true);
+    else if(it==="again") { forcedId = q.id; goNext(); }
+    else if(!second) askContinue(q, true);
+    else setStatus("<b>ボタンで選んでください。</b>");
+  }
+  function renderResult(q, res, text){
+    const chips = q.keys.map((g,i) => '<span class="chip '+(res.hits.includes(i)?'ok':'ng')+'">'+(res.hits.includes(i)?'✓ ':'× ')+esc(g[0])+'</span>').join("");
+    $("result").innerHTML = `
+      <div class="verdict"><span class="big ${res.pass?'ok':'ng'}">${res.pass?'合格':'不合格'}</span><span class="sub">${res.hits.length} / ${res.total} の要素（合格ライン ${res.need}）${res.rejected.length?'　余計な語: '+esc(res.rejected.join("、")):''}</span></div>
+      <div class="chips">${chips}</div>
+      <h3>正解 <button class="btn ghost" id="btnReadAns" style="padding:2px 8px;font-size:12px">▶ 読み上げ</button></h3>
+      <div class="model">${esc(q.answer)}</div>${q.note?'<p class="note">'+esc(q.note)+'</p>':''}
+      <h3 style="margin-top:14px">聞き取りの誤りを直す <span class="tag">直して「再判定」すると記録も更新</span></h3>
+      <textarea id="editTr">${esc(text)}</textarea>
+      <div class="actions">
+        <button class="btn" id="btnRejudge">再判定</button>
+        <button class="btn" id="btnAgain">この問題をもう一度</button>
+        <button class="btn primary" id="btnNext">次の問題へ</button>
+        <button class="btn danger" id="btnStop">ここでやめる</button>
+      </div>`;
+    $("btnReadAns").addEventListener("click", () => { stopListen(); speak(q.tts||q.answer); });
+    $("btnRejudge").addEventListener("click", () => {
+      stopListen(); stopSpeak();
+      const t = $("editTr").value.trim(); const r2 = K.judge(q, t);
+      // 直前の記録を取り消して付け直す
+      if(res.pass) session.ok--; else session.ng--;
+      record(q, r2.pass, true);
+      if(r2.pass) session.ok++; else session.ng++;
+      renderResult(q, r2, t); renderList(); phase="wait";
+      setStatus("<b>再判定しました。</b>「次の問題へ」で進みます。");
+    });
+    $("btnAgain").addEventListener("click", () => { stopListen(); stopSpeak(); forcedId=q.id; goNext(); });
+    $("btnNext").addEventListener("click", () => { stopListen(); stopSpeak(); goNext(); });
+    $("btnStop").addEventListener("click", () => stopSession(true));
+  }
+  async function stopSession(announce){
+    running = false; phase="idle"; stopListen(); stopSpeak(); cur=null;
+    const c = counts();
+    $("stage").innerHTML = `
+      <section class="card">
+        <h3 style="margin-top:0">ここまでの結果</h3>
+        <div class="summary"><div><b>${session.asked}</b><span>今回の出題</span></div><div><b style="color:var(--ok)">${session.ok}</b><span>合格</span></div><div><b style="color:var(--ng)">${session.ng}</b><span>不合格</span></div><div><b>${c.done} / ${QS.length}</b><span>合格確定</span></div></div>
+        <p class="note">記録は端末に保存されます。次回「続きから開始」で、再出題待ちの問題から再開します。</p>
+        <div class="actions"><button class="btn primary big" id="btnResume">続きから開始</button><button class="btn" id="btnHome">最初の画面へ</button></div>
+      </section>`;
+    $("btnResume").addEventListener("click", startSession);
+    $("btnHome").addEventListener("click", renderHome);
+    renderList();
+    if(announce) await speak("ここまでにします。今回は" + session.asked + "問中、" + session.ok + "問合格でした。お疲れさまでした。");
+  }
+  async function finishAll(){
+    running=false; phase="idle"; stopListen(); cur=null;
+    $("stage").innerHTML = `<section class="card"><h3 style="margin-top:0">全問合格</h3><p class="empty">${QS.length}問すべてが合格になりました。お疲れさまでした。</p><div class="actions"><button class="btn primary" id="btnHome">最初の画面へ</button></div></section>`;
+    $("btnHome").addEventListener("click", renderHome); renderList();
+    await speak("全問合格です。" + QS.length + "問すべてに合格しました。お疲れさまでした。");
+  }
+
+  $("btnReset").addEventListener("click", () => {
+    const b=$("btnReset");
+    if(b.dataset.arm){ stopListen(); stopSpeak(); running=false; state={}; save(); delete b.dataset.arm; b.textContent="記録を消す"; toast("記録を消しました"); renderHome(); }
+    else { b.dataset.arm="1"; b.textContent="もう一度押すと消えます"; setTimeout(()=>{ delete b.dataset.arm; b.textContent="記録を消す"; },3000); }
+  });
+  renderHome();
+})();
+</script>
+</body>
+</html>
