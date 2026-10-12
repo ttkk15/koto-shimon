@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --paper:#E7E9E3; --surface:#FCFCFA; --surface-2:#F1F3ED;
@@ -129,6 +130,7 @@
   <span class="sub">13題 ／ 問1 一問一答 → 問2 500〜600字 → 「型」で採点</span>
   <span class="spacer"></span>
   <a href="voice.html?openExternalBrowser=1" id="lnkVoice">口頭試問へ →</a>
+  <button class="btn ghost" id="btnDrive">保存先設定</button>
   <button class="btn ghost" id="btnReset">記録を消す</button>
 </header>
 
@@ -3520,6 +3522,8 @@ window.KOTO_ESSAYS = {
           <button class="btn primary" id="btnScore">採点して解答例と比べる</button>
           <button class="btn" id="btnPeek">採点せずに解答例だけ見る</button>
           <button class="btn ghost" id="btnTimer">時間を計る</button>
+          <button class="btn" id="btnWord">Wordで書き出す</button>
+          <button class="btn" id="btnDriveSave">Driveに保存</button>
           <span class="clock" id="clock"></span>
         </div>
       </section>
@@ -3531,6 +3535,8 @@ window.KOTO_ESSAYS = {
     ta.addEventListener("input", () => { r.draft = ta.value; save(); updateCount(); });
     updateCount();
     $("btnScore").addEventListener("click", doScore);
+    $("btnWord").addEventListener("click", () => exportWord(false));
+    $("btnDriveSave").addEventListener("click", () => exportWord(true));
     $("btnPeek").addEventListener("click", () => showResult(null));
     $("btnTimer").addEventListener("click", () => { if(timer){ stopTimer(); } else { tStart = Date.now(); timer = setInterval(()=>{ $("clock").textContent = mmss((Date.now()-tStart)/1000); },1000); $("btnTimer").textContent="計測を止める"; } });
     if(r.a1 && r.j1!=null) showJudge(r.j1);
@@ -3561,6 +3567,7 @@ window.KOTO_ESSAYS = {
     const res = window.KotoEssay.score(cur, text, D);
     const r = rec(cur.id);
     r.last = res.total; r.lastAt = Date.now();
+    r.lastRes = {draft:text, total:res.total, grade:res.grade.label, comment:res.grade.comment, form:res.form, content:res.content, items:res.items.concat(res.rubric).map(i=>({label:i.label,got:i.got,max:i.max})), advice:res.advice};
     if(r.best==null || res.total > r.best){ r.best = res.total; r.bestGrade = res.grade.label; }
     r.history = (r.history||[]).slice(-9).concat([{t:Date.now(), s:res.total}]);
     save(); renderList(); showResult(res);
@@ -3607,6 +3614,89 @@ window.KOTO_ESSAYS = {
     const b=$("btnReset");
     if(b.dataset.arm){ state={}; save(); renderList(); toast("記録を消しました"); delete b.dataset.arm; b.textContent="記録を消す"; }
     else { b.dataset.arm="1"; b.textContent="もう一度押すと消えます"; setTimeout(()=>{ delete b.dataset.arm; b.textContent="記録を消す"; },3000); }
+  });
+
+  // ---- Word書き出し・Drive保存 ----
+  const CFG = "koto_drive_cfg_v1";
+  const DRIVE_URL = "https://script.google.com/a/macros/post.ibk.ed.jp/s/AKfycby5dRvbqOcSw5274LhaFCBYD6tYuaWORK-lNqXYJ9sPU6Z3034q6JL-F5_mUskm0OPg/exec";
+  function cfg(){ try{ return JSON.parse(localStorage.getItem(CFG)||"{}"); }catch(e){ return {}; } }
+  function xesc(s){ return String(s==null?"":s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,""); }
+  function wp(text, o){
+    o = o||{}; const sz = o.size||21;
+    const rpr = '<w:rPr><w:rFonts w:ascii="Yu Mincho" w:hAnsi="Yu Mincho" w:eastAsia="游明朝"/>'+(o.bold?'<w:b/>':'')+(o.color?'<w:color w:val="'+o.color+'"/>':'')+'<w:sz w:val="'+sz+'"/></w:rPr>';
+    const ppr = '<w:pPr><w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after==null?60:o.after)+'" w:line="'+(o.line||340)+'" w:lineRule="auto"/>'+(o.indent?'<w:ind w:firstLine="'+o.indent+'"/>':'')+'</w:pPr>';
+    return '<w:p>'+ppr+'<w:r>'+rpr+'<w:t xml:space="preserve">'+xesc(text)+'</w:t></w:r></w:p>';
+  }
+  function fmtDate(d){ const z=n=>String(n).padStart(2,"0"); return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"-"+z(d.getHours())+z(d.getMinutes()); }
+  function wordName(r, d){
+    const sc = r.lastRes && r.lastRes.draft===r.draft ? "_"+r.lastRes.total+"点" : "";
+    return ("論作文_"+cur.title+"_"+fmtDate(d)+sc).replace(/[\\\/:*?"<>|\s　]+/g,"") + ".docx";
+  }
+  async function buildDocx(r, d){
+    if(typeof JSZip==="undefined") throw new Error("JSZipが読み込めません（ネット接続を確認）");
+    const body = [];
+    body.push(wp("校長選考 論作文　"+cur.title, {bold:true, size:30, after:80}));
+    body.push(wp("作成日時: "+d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+"　出典: "+cur.source, {size:18, color:"6E7C78", after:200}));
+    body.push(wp("問1　"+cur.q1.question, {bold:true}));
+    body.push(wp("私の答え: "+(r.a1||"（未回答）")+(r.j1==null?"":r.j1?"　○正解":"　×不正解（正答: "+cur.q1.answer+"）"), {after:200}));
+    body.push(wp("問2　"+cur.q2, {bold:true}));
+    const txt = r.draft||"";
+    body.push(wp("字数: "+txt.replace(/[\s　]+/g,"").length+"字（"+cur.chars[0]+"〜"+cur.chars[1]+"字）", {size:18, color:"6E7C78"}));
+    txt.split("\n").forEach(l => body.push(wp(l, {indent: /^[12１２]\s*\S/.test(l)&&l.length<=45 ? 0 : 210, bold: /^[12１２]\s*\S/.test(l)&&l.length<=45, line:380})));
+    const L = r.lastRes;
+    if(L && L.draft===txt){
+      body.push(wp("採点結果　"+L.total+" / 100　"+L.grade, {bold:true, size:26, before:300}));
+      body.push(wp(L.comment, {after:100}));
+      body.push(wp("型 "+L.form+" / 80　内容 "+L.content+" / 20", {size:19, after:80}));
+      L.items.forEach(i => body.push(wp((i.got===i.max?"✓ ":i.got>0?"△ ":"× ")+i.label+"　"+i.got+" / "+i.max, {size:19, after:20})));
+      if(L.advice.length){ body.push(wp("アドバイス", {bold:true, before:160})); L.advice.forEach((a,i)=>body.push(wp((i+1)+". "+a, {size:19}))); }
+    } else {
+      body.push(wp("（この答案はまだ採点していないか、採点後に書き直されています）", {size:18, color:"6E7C78", before:300}));
+    }
+    const ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+    const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+ns+'><w:body>'+body.join("")+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1304" w:bottom="1418" w:left="1304" w:header="851" w:footer="992" w:gutter="0"/></w:sectPr></w:body></w:document>';
+    const z = new JSZip();
+    z.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+    z.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    z.file("word/document.xml", doc);
+    return z;
+  }
+  async function exportWord(toDrive){
+    const r = rec(cur.id);
+    if(!(r.draft||"").trim()){ toast("答案が空です"); return; }
+    const d = new Date(), name = wordName(r, d);
+    let z;
+    try{ z = await buildDocx(r, d); }catch(e){ toast("Word作成に失敗: "+e.message); return; }
+    if(!toDrive){
+      const blob = await z.generateAsync({type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      toast("Wordを書き出しました: "+name); return;
+    }
+    const c = cfg();
+    if(!c.key){ toast("先に「保存先設定」で合言葉を入れてください"); return; }
+    // ログインが要る受け口なので、新しいタブでフォーム送信する（ポップアップ扱いにならないよう先に開く）
+    const w = window.open("", "koto_drive_save");
+    if(!w){ toast("新しいタブが開けません。ポップアップを許可してください"); return; }
+    try{ w.document.write('<meta charset="utf-8"><p style="font-family:sans-serif;padding:24px">Driveに保存中…</p>'); }catch(e){}
+    try{
+      const b64 = await z.generateAsync({type:"base64"});
+      const f = document.createElement("form");
+      f.method = "POST"; f.action = c.url || DRIVE_URL; f.target = "koto_drive_save"; f.acceptCharset = "UTF-8";
+      const inp = document.createElement("input"); inp.type = "hidden"; inp.name = "payload";
+      inp.value = JSON.stringify({key:c.key, name:name, data:b64});
+      f.appendChild(inp); document.body.appendChild(f); f.submit(); f.remove();
+      toast("新しいタブで保存しています: "+name);
+    }catch(e){
+      try{ w.close(); }catch(_){}
+      toast("送信できません: "+e.message);
+    }
+  }
+  $("btnDrive").addEventListener("click", () => {
+    const c = cfg();
+    const url = prompt("Apps Script のウェブアプリURL（…/exec）。通常はこのままでよい", c.url||DRIVE_URL); if(url===null) return;
+    const key = prompt("合言葉（スクリプトの KEY と同じもの）", c.key||""); if(key===null) return;
+    try{ localStorage.setItem(CFG, JSON.stringify({url:url.trim(), key:key.trim()})); toast("保存先を設定しました（この端末のみ）"); }catch(e){ toast("設定を保存できません"); }
   });
   renderList();
 })();
