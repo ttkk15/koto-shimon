@@ -3524,6 +3524,8 @@ window.KOTO_ESSAYS = {
           <button class="btn ghost" id="btnTimer">時間を計る</button>
           <button class="btn" id="btnWord">Wordで書き出す</button>
           <button class="btn" id="btnDriveSave">Driveに保存</button>
+          <button class="btn" id="btnGenkou">原稿用紙で書き出す</button>
+          <button class="btn" id="btnGenkouPrint">原稿用紙を印刷</button>
           <span class="clock" id="clock"></span>
         </div>
       </section>
@@ -3537,6 +3539,8 @@ window.KOTO_ESSAYS = {
     $("btnScore").addEventListener("click", doScore);
     $("btnWord").addEventListener("click", () => exportWord(false));
     $("btnDriveSave").addEventListener("click", () => exportWord(true));
+    $("btnGenkou").addEventListener("click", exportGenkou);
+    $("btnGenkouPrint").addEventListener("click", printGenkou);
     $("btnPeek").addEventListener("click", () => showResult(null));
     $("btnTimer").addEventListener("click", () => { if(timer){ stopTimer(); } else { tStart = Date.now(); timer = setInterval(()=>{ $("clock").textContent = mmss((Date.now()-tStart)/1000); },1000); $("btnTimer").textContent="計測を止める"; } });
     if(r.a1 && r.j1!=null) showJudge(r.j1);
@@ -3691,6 +3695,84 @@ window.KOTO_ESSAYS = {
       try{ w.close(); }catch(_){}
       toast("送信できません: "+e.message);
     }
+  }
+
+  // ---- 原稿用紙（横書き 30字×20行・A4横） ----
+  const GC = 30, GR = 20;
+  const KINSOKU = "、。，．,.」』）)！？!?ー・：；";
+  function isHead(l){ return /^[12１２]\s*\S/.test(l) && l.length<=45; }
+  function toGrid(text){
+    const rows = [];
+    let row = [];
+    const push = ch => {
+      if(row.length===GC){
+        if(KINSOKU.indexOf(ch)>=0){ row[GC-1] += ch; return; }   // 句読点が行頭に来るときは前の行の最後のマスへ
+        rows.push(row); row = [];
+      }
+      row.push(ch);
+    };
+    for(const raw of (text||"").replace(/\r/g,"").split("\n")){
+      const l = raw.replace(/\s+$/,"");
+      if(!l.trim()) continue;
+      if(row.length){ rows.push(row); row = []; }
+      if(!isHead(l) && !/^[　 ]/.test(l)) push("");          // 段落の頭は1マス空け
+      for(const ch of Array.from(l)) push(ch===" " ? "" : ch);
+    }
+    if(row.length) rows.push(row);
+    const pages = [];
+    for(let i=0;i<Math.max(rows.length,1);i+=GR) pages.push(rows.slice(i,i+GR));
+    return pages.map(pg => { while(pg.length<GR) pg.push([]); return pg.map(r => { r = r.slice(); while(r.length<GC) r.push(""); return r; }); });
+  }
+  function genkouName(d){ return ("原稿用紙_"+cur.title+"_"+fmtDate(d)).replace(/[\\\/:*?"<>|\s　]+/g,"") + ".docx"; }
+  async function exportGenkou(){
+    const r = rec(cur.id);
+    if(!(r.draft||"").trim()){ toast("答案が空です"); return; }
+    if(typeof JSZip==="undefined"){ toast("JSZipが読み込めません（ネット接続を確認）"); return; }
+    const pages = toGrid(r.draft), d = new Date();
+    const CW = 504, RH = 490, LINE = "7A9A7A";
+    const bd = '<w:tblBorders>'+["top","left","bottom","right","insideH","insideV"].map(k=>'<w:'+k+' w:val="single" w:sz="4" w:space="0" w:color="'+LINE+'"/>').join("")+'</w:tblBorders>';
+    const rpr = '<w:rPr><w:rFonts w:ascii="Yu Mincho" w:hAnsi="Yu Mincho" w:eastAsia="游明朝"/><w:sz w:val="26"/></w:rPr>';
+    const cell = ch => '<w:tc><w:tcPr><w:tcW w:w="'+CW+'" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'+(ch?'<w:r>'+rpr+'<w:t xml:space="preserve">'+xesc(ch)+'</w:t></w:r>':'')+'</w:p></w:tc>';
+    const table = pg => '<w:tbl><w:tblPr><w:tblW w:w="'+CW*GC+'" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/>'+bd+'<w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+('<w:gridCol w:w="'+CW+'"/>').repeat(GC)+'</w:tblGrid>'
+      + pg.map(row => '<w:tr><w:trPr><w:trHeight w:val="'+RH+'" w:hRule="exact"/><w:cantSplit/></w:trPr>'+row.map(cell).join("")+'</w:tr>').join("") + '</w:tbl>';
+    const tiny = br => '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr>'+(br?'<w:r><w:br w:type="page"/></w:r>':'')+'</w:p>';
+    const ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+    const body = pages.map((pg,i) => table(pg) + tiny(i<pages.length-1)).join("");
+    const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+ns+'><w:body>'+body
+      + '<w:sectPr><w:headerReference w:type="default" r:id="rIdH1"/><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="1077" w:right="850" w:bottom="680" w:left="850" w:header="482" w:footer="397" w:gutter="0"/></w:sectPr></w:body></w:document>';
+    const hdr = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr '+ns+'><w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Yu Mincho" w:hAnsi="Yu Mincho" w:eastAsia="游明朝"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">'+xesc(cur.title)+'</w:t></w:r></w:p></w:hdr>';
+    const z = new JSZip();
+    z.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/></Types>');
+    z.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    z.file("word/_rels/document.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdH1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/></Relationships>');
+    z.file("word/document.xml", doc);
+    z.file("word/header1.xml", hdr);
+    const blob = await z.generateAsync({type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    const name = genkouName(d);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast("原稿用紙を書き出しました: "+name+(pages.length>1?"（"+pages.length+"枚）":""));
+  }
+  function printGenkou(){
+    const r = rec(cur.id);
+    if(!(r.draft||"").trim()){ toast("答案が空です"); return; }
+    const w = window.open("", "koto_genkou");
+    if(!w){ toast("新しいタブが開けません。ポップアップを許可してください"); return; }
+    const pages = toGrid(r.draft);
+    const sheet = pg => '<section class="pg"><div class="ttl">'+esc(cur.title)+'</div><table>'+pg.map(row=>'<tr>'+row.map(ch=>'<td>'+esc(ch)+'</td>').join("")+'</tr>').join("")+'</table></section>';
+    w.document.open();
+    w.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>原稿用紙 '+esc(cur.title)+'</title><style>'
+      + '@page{size:A4 landscape;margin:10mm 13mm 8mm}'
+      + 'html,body{margin:0;background:#fff;color:#000;font-family:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+      + '.bar{font-family:sans-serif;padding:10px 16px;background:#E7E9E3;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.bar button{font-size:15px;padding:6px 16px}'
+      + '.pg{width:271mm;margin:6mm auto;page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto;break-after:auto}'
+      + '.ttl{font-size:11pt;margin:0 0 2.5mm}'
+      + 'table{border-collapse:collapse;table-layout:fixed}td{width:9mm;height:9mm;padding:0;border:.3mm solid #7A9A7A;text-align:center;vertical-align:middle;font-size:14pt;line-height:1;white-space:nowrap;overflow:hidden}'
+      + '@media print{.bar{display:none}.pg{margin:0}}'
+      + '</style></head><body><div class="bar"><button onclick="print()">印刷する</button><span>A4横・30字×20行。印刷設定で「用紙の向き：横」「倍率：100%」にしてください。</span></div>'
+      + pages.map(sheet).join("") + '</body></html>');
+    w.document.close();
+    setTimeout(() => { try{ w.focus(); w.print(); }catch(e){} }, 600);
   }
   $("btnDrive").addEventListener("click", () => {
     const c = cfg();
